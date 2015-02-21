@@ -1,7 +1,13 @@
 apply plugin: 'java'
 
 sourceCompatibility = 1.7
-version = '1.0'
+version = System.getenv("BUILD_NUMBER") ?: 'SNAPSHOT-' + getDate()
+
+def getDate() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMddHHmmss')
+    return formattedDate
+}
 
 repositories {
     mavenCentral()
@@ -12,7 +18,7 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.4'
     compile 'org.apache.commons:commons-lang3:3.3.2'
 
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile 'junit:junit:4.11'
 }
 
 task wrapper(type: Wrapper) {
