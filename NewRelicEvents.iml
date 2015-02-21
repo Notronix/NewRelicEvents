@@ -21,5 +21,6 @@
     <orderEntry type="library" exported="" name="Gradle: org.apache.httpcomponents:httpcore:4.4" level="project" />
     <orderEntry type="library" exported="" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" exported="" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: org.apache.commons:commons-lang3:3.3.2" level="project" />
   </component>
 </module>
