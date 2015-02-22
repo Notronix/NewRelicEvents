@@ -22,7 +22,7 @@ public class NewRelicClientTest
 
         NewRelicClient client = new NewRelicClient();
         client.setInsertKey("test");
-        client.setAccountId(0);
+        client.setAccountId(1);
 
         try
         {
