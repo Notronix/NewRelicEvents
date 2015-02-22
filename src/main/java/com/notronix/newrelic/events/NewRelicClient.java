@@ -3,6 +3,8 @@ package com.notronix.newrelic.events;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.StatusLine;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
@@ -99,12 +101,25 @@ public class NewRelicClient
         Map<String, Object> attributes = new HashMap<>(event.getAttributes());
         attributes.put("eventType", eventType);
 
+        RequestConfig defaultRequestConfig = RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .setExpectContinueEnabled(true)
+                .build();
+
+        RequestConfig requestConfig = RequestConfig.copy(defaultRequestConfig)
+                .setSocketTimeout(30000)
+                .setConnectTimeout(30000)
+                .setConnectionRequestTimeout(30000)
+                .build();
+
         HttpPost request = new HttpPost("https://insights-collector.newrelic.com/v1/accounts/" + accountId + "/events");
         request.addHeader("Content-Type", "application/json");
         request.addHeader("X-Insert-Key", insertKey);
         request.setEntity(new ByteArrayEntity(new Gson().toJson(attributes).getBytes()));
+        request.setConfig(requestConfig);
 
-        try (CloseableHttpClient client = HttpClientBuilder.create().build(); CloseableHttpResponse response = client.execute(request))
+        try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+             CloseableHttpResponse response = client.execute(request))
         {
             return response.getStatusLine();
         }
@@ -116,8 +131,6 @@ public class NewRelicClient
 
     private static boolean isInvalidEventType(String eventType)
     {
-        String type = eventType.replaceAll(":", "").replaceAll("_", "");
-
-        return isAlphanumeric(type);
+        return eventType == null || !isAlphanumeric(eventType.replaceAll(":", "").replaceAll("_", ""));
     }
 }
