@@ -184,6 +184,9 @@ public class NewRelicEventTest
             {
                 event.addAttribute(word, word);
             }
+
+            event.addAttribute("endTime", "this is a test");
+            event.addAttribute("thisIsATest", "Another Test");
         }
         catch (APIViolationException e)
         {
@@ -194,6 +197,9 @@ public class NewRelicEventTest
         {
             assertEquals("Attribute name (" + word + ") should have been cleaned.", word, event.getAttributes().get("`" + word + "`"));
         }
+
+        assertEquals("Attribute name should have been cleaned.", "this is a test", event.getAttributes().get("`endTime`"));
+        assertEquals("Attribute name should not have been cleaned.", "Another Test", event.getAttributes().get("thisIsATest"));
     }
 
     @Test

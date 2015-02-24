@@ -2,7 +2,7 @@
 A simple library that can be used to submit new relic custom events.
 
 ## Download
-Version 1.1.0 is available for download here https://github.com/Notronix/NewRelicEvents/releases/tag/v1.1.0
+Version 1.1.001 is available for download here https://github.com/Notronix/NewRelicEvents/releases/tag/v1.1.001
 
 The NewRelicEvents library (and its dependencies) can be found in the releases directory
 

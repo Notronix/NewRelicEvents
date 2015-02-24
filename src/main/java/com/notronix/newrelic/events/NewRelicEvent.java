@@ -135,9 +135,9 @@ public abstract class NewRelicEvent
 
     private static String cleanAttributeName(String name)
     {
-        String attributeName = lowerCase(trim(name));
+        String attributeName = trim(name);
 
-        if (RESERVED_KEYWORDS.contains(attributeName))
+        if (RESERVED_KEYWORDS.contains(lowerCase(attributeName)))
         {
             attributeName = "`" + attributeName + "`";
         }
