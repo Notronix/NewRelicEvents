@@ -4,6 +4,7 @@ import org.apache.commons.codec.Charsets;
 
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
 import static org.apache.commons.lang3.StringUtils.trim;
 
@@ -85,6 +86,31 @@ public abstract class NewRelicEvent
         }
 
         attributes.put(cleanAttributeName(name), value);
+    }
+
+    /**
+     * Adds the elements of the provided Iterable to the custom event by joining them into a single String.
+     *
+     * No delimiter is added before or after the list. A null separator is the same as an empty String ("").
+     *
+     * @param name the name of the attribute
+     * @param iterable the Iterable providing the values to join together, may be null
+     * @param separator the separator character to use, null treated as ""
+     * @throws APIViolationException if there are too many attributes.
+     */
+    public void addAttribute(String name, Iterable<String> iterable, String separator) throws APIViolationException
+    {
+        if (tooManyAttributes())
+        {
+            throw new APIViolationException("Attribute limit exceeded.");
+        }
+
+        attributes.put(cleanAttributeName(name), join(iterable, separator));
+    }
+
+    public Object getAttribute(String name)
+    {
+        return attributes.get(cleanAttributeName(name));
     }
 
     /**

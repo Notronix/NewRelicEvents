@@ -195,4 +195,36 @@ public class NewRelicEventTest
             assertEquals("Attribute name (" + word + ") should have been cleaned.", word, event.getAttributes().get("`" + word + "`"));
         }
     }
+
+    @Test
+    public void testGetAttribute()
+    {
+        String attr1 = "string attribute";
+        double attr2 = 2.5;
+        int attr3 = 25;
+
+        NewRelicEvent event = new NewRelicEvent() {
+            @Override
+            public String getEventType()
+            {
+                return "test";
+            }
+        };
+
+        try
+        {
+            event.addAttribute("attr1", attr1);
+            assertEquals("Failed getting string attribute", attr1, event.getAttribute("attr1"));
+
+            event.addAttribute("attr2", attr2);
+            assertEquals("Failed getting double attribute", attr2, event.getAttribute("attr2"));
+
+            event.addAttribute("attr3", attr3);
+            assertEquals("Failed getting integer attribute", attr3, event.getAttribute("attr3"));
+        }
+        catch (APIViolationException e)
+        {
+            fail("Should be able to add items without error.");
+        }
+    }
 }

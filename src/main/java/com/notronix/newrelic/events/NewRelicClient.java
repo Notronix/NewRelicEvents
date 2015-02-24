@@ -1,32 +1,37 @@
 package com.notronix.newrelic.events;
 
 import com.google.gson.Gson;
-import org.apache.commons.lang3.StringUtils;
+import com.google.gson.JsonSyntaxException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
- * A simple client for submitting custom New Relic events.
+ * A simple client for submitting and querying custom New Relic events via the Insights API.
  *
  * @author Clint Munden
  * @version 1.0
  * @see com.notronix.newrelic.events.NewRelicEvent
+ * @see com.notronix.newrelic.events.NewRelicQuery
  */
 public class NewRelicClient
 {
     private int accountId;
     private String insertKey;
+    private String queryKey;
 
     /**
      * Gets the account ID that the client will send events to.
@@ -69,19 +74,39 @@ public class NewRelicClient
     }
 
     /**
-     * Submits a custom new relic event via the New Relic Insights API.
-     * <p/>
-     * Before this method is called, the client should be initialized with a valid New Relic account ID and insert key.
+     * Gets the New Relic API query key that this client will use to query custom events.
+     *
+     * @return the New Relic API query key.
+     */
+    public String getQueryKey()
+    {
+        return queryKey;
+    }
+
+    /**
+     * Sets the New Relic API query key that this client will use to query custom events.
+     *
+     * @param queryKey the New Relic API query key.
+     */
+    public void setQueryKey(String queryKey)
+    {
+        this.queryKey = queryKey;
+    }
+
+    /**
+     * Submits a custom new relic event via the New Relic Insights API.  Before this method is called, the client should be initialized with a valid New Relic
+     * account ID and insert key.
      *
      * @param event The New Relic custom event to be submitted.
      * @return the response status returned by the New Relic Insights API.
-     * @throws IllegalStateException    if this method is called before an <code>accountId</code> and <code>insertKey</code> are set.
-     * @throws NewRelicLoggingException if there is any unexpected exception while attempting to submit an event.
-     * @throws APIViolationException    if the event type of the event violates the insights API specifications.
+     * @throws IllegalStateException   if this method is called before an <code>accountId</code> and <code>insertKey</code> are set.
+     * @throws NewRelicInsertException if there is any unexpected exception while attempting to submit an event.
+     * @throws APIViolationException   if the event type of the event violates the insights API specifications.
+     * @throws NullPointerException    if the event is null
      */
-    public StatusLine submit(NewRelicEvent event) throws IllegalStateException, NewRelicLoggingException, APIViolationException
+    public StatusLine submit(NewRelicEvent event) throws IllegalStateException, NewRelicInsertException, APIViolationException, NullPointerException
     {
-        if (accountId <= 0 || StringUtils.isBlank(insertKey))
+        if (accountId <= 0 || isBlank(insertKey))
         {
             throw new IllegalStateException("Uninitialized Client.  Please initialize with a valid NewRelic accountId and a valid insert key.");
         }
@@ -125,8 +150,76 @@ public class NewRelicClient
         }
         catch (Exception e)
         {
-            throw new NewRelicLoggingException("NewRelic logging failure.", e);
+            throw new NewRelicInsertException("NewRelic insertion failure.", e);
         }
+    }
+
+    /**
+     * Executes the NRQL query via the New Relic Insights API.  Before this method is called, the client should be initialized with a valid New Relic account
+     * ID and query key.
+     *
+     * @param query the NRQL query to be executed.
+     * @return the json response obtained as a result of executing the query.
+     * @throws IllegalStateException  if this method is called before an <code>accountId</code> and <code>queryKey</code> are set.
+     * @throws NullPointerException   if the <code>query</code> is null
+     * @throws NewRelicQueryException if there is any unexpected exception while attempting to execute the query, or if there is an error in the NRQL.
+     */
+    public String query(NewRelicQuery query) throws IllegalStateException, NullPointerException, NewRelicQueryException
+    {
+        if (accountId <= 0 || isBlank(queryKey))
+        {
+            throw new IllegalStateException("Uninitialized Client.  Please initialize with a valid NewRelic accountId and a valid query key.");
+        }
+
+        if (query == null)
+        {
+            throw new NullPointerException("query is null.");
+        }
+
+        RequestConfig defaultRequestConfig = RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .setExpectContinueEnabled(true)
+                .build();
+
+        RequestConfig requestConfig = RequestConfig.copy(defaultRequestConfig)
+                .setSocketTimeout(30000)
+                .setConnectTimeout(30000)
+                .setConnectionRequestTimeout(30000)
+                .build();
+
+        HttpGet request = new HttpGet("https://insights-api.newrelic.com/v1/accounts/" + accountId + "/query?nrql=" + query.getQueryString());
+        request.addHeader("Accept", "application/json");
+        request.addHeader("X-Query-Key", queryKey);
+        request.setConfig(requestConfig);
+
+        String json;
+
+        try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+             CloseableHttpResponse response = client.execute(request))
+        {
+            json = EntityUtils.toString(response.getEntity());
+        }
+        catch (Exception e)
+        {
+            throw new NewRelicQueryException("NewRelic query failure.", e);
+        }
+
+        try
+        {
+            Map results = new Gson().fromJson(json, Map.class);
+            Object error = results.get("error");
+
+            if (error instanceof String)
+            {
+                throw new NewRelicQueryException((String) error);
+            }
+        }
+        catch (JsonSyntaxException e)
+        {
+            throw new NewRelicQueryException("Error parsing json response.", e);
+        }
+
+        return json;
     }
 
     private static boolean isInvalidEventType(String eventType)
