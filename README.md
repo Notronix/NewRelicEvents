@@ -1,5 +1,7 @@
 # New Relic Events
-A simple library that can be used to submit new relic custom events.
+A simple Java library that can be used to submit [custom events](http://newrelic.com/insights/technology/integrations) to [New Relic Insights](http://newrelic.com/insights).
+
+This library is useful when you need to send custom events to Insights, but you aren't running New Relic's [APM Java language agent](http://newrelic.com/java) (which has a [built-in capability for sending custom events to Insights](https://docs.newrelic.com/docs/agents/java-agent/custom-instrumentation/java-agent-api#api_methods))
 
 ## Download
 Version 1.1.001 is available for download here https://github.com/Notronix/NewRelicEvents/releases/tag/v1.1.001
@@ -40,22 +42,22 @@ try
 }
 catch (APIViolationException e)
 {
-    System.out.println("Uh oh... I have violated the NR Insights API.");
+    System.out.println("Uh oh... I have violated the New Relic Insights API.");
 }
 
 NewRelicClient client = new NewRelicClient();
-client.setAccountId(0); // this should be your NR account ID
-client.setInsertKey("YOUR KEY HERE"); // this should be your NR Insights Insert Key
+client.setAccountId(0); // this should be your New Relic account ID, which is the 12345 part of your Insights account URL https://insights.newrelic.com/accounts/12345
+client.setInsertKey("YOUR KEY HERE"); // this should be your [Insights Insert Key](https://docs.newrelic.com/docs/insights/new-relic-insights/adding-querying-data/inserting-custom-events-via-insights-api#register)
 
 try
 {
     StatusLine responseStatus = client.submit(meaninglessEvent);
 
-    System.out.println("NR responded with status code: " + responseStatus.getStatusCode());
+    System.out.println("New Relic responded with status code: " + responseStatus.getStatusCode());
 }
 catch (APIViolationException e)
 {
-    System.out.println("This can happen if your event's eventType is invalid according to the NR Insights API");
+    System.out.println("This can happen if your event's eventType is invalid according to the New Relic Insights API");
 }
 catch (NewRelicLoggingException e)
 {
