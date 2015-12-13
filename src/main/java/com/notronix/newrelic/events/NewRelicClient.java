@@ -2,6 +2,7 @@ package com.notronix.newrelic.events;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -13,7 +14,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
@@ -126,10 +131,19 @@ public class NewRelicClient
         Map<String, Object> attributes = new HashMap<>(event.getAttributes());
         attributes.put("eventType", eventType);
 
-        RequestConfig defaultRequestConfig = RequestConfig.custom()
+        RequestConfig.Builder defaultRequestConfigBuilder = RequestConfig.custom()
                 .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .setExpectContinueEnabled(true)
-                .build();
+                .setExpectContinueEnabled(true);
+        URI newRelicInsightsURI = URI.create("https://insights-collector.newrelic.com/");
+        ProxySelector proxySelector = ProxySelector.getDefault();
+        List<Proxy> proxies = proxySelector.select(newRelicInsightsURI);
+        if (!proxies.isEmpty())
+        {
+            Proxy proxy = proxies.get(0);
+            HttpHost proxyHost = new HttpHost(proxy.address().toString());
+            defaultRequestConfigBuilder.setProxy(proxyHost);
+        }
+        RequestConfig defaultRequestConfig = defaultRequestConfigBuilder.build();
 
         RequestConfig requestConfig = RequestConfig.copy(defaultRequestConfig)
                 .setSocketTimeout(30000)
