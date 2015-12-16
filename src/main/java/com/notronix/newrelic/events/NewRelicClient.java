@@ -140,8 +140,14 @@ public class NewRelicClient
         if (!proxies.isEmpty())
         {
             Proxy proxy = proxies.get(0);
-            HttpHost proxyHost = new HttpHost(proxy.address().toString());
-            defaultRequestConfigBuilder.setProxy(proxyHost);
+            String[] fields = proxy.address().toString().split(":");
+            String host = fields[0];
+            int port = -1;
+            if (fields.length > 1)
+            {
+                port = Integer.parseInt(fields[1]);
+            }
+            defaultRequestConfigBuilder.setProxy(new HttpHost(host, port));
         }
         RequestConfig defaultRequestConfig = defaultRequestConfigBuilder.build();
 
