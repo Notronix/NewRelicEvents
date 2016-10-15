@@ -4,9 +4,10 @@ A simple Java library that can be used to submit [custom events](http://newrelic
 This library is useful when you need to send custom events to Insights, but you aren't running New Relic's [APM Java language agent](http://newrelic.com/java) (which has a [built-in capability for sending custom events to Insights](https://docs.newrelic.com/docs/agents/java-agent/custom-instrumentation/java-agent-api#api_methods))
 
 ## Download
-Version 1.1.001 is available for download here https://github.com/Notronix/NewRelicEvents/releases/tag/v1.1.001
-
-The NewRelicEvents library (and its dependencies) can be found in the releases directory
+The NewRelicEvents library is available from [The Central Repository](https://search.maven.org/)
+groupId: com.notronix
+artifactId: NewRelicEvents
+version: 1.1.001
 
 ## Usage
 

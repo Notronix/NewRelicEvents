@@ -1,9 +1,12 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
+group = 'com.notronix'
 version = System.getenv("BUILD_NUMBER") ?: 'SNAPSHOT-' + getDate()
 
-def getDate() {
+static def getDate() {
     def date = new Date()
     def formattedDate = date.format('yyyyMMddHHmmss')
     return formattedDate
@@ -22,6 +25,75 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
+jar {
+    manifest {
+        attributes 'Implementation-Title': rootProject.name,
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'Notronix'
+    }
+}
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2.1'
+    gradleVersion = '3.1'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from tasks.javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+
+    archives javadocJar
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name rootProject.name
+                packaging 'jar'
+                description 'A java library for working with NewRelic Insights.'
+                url 'https://github.com/Notronix/NewRelicEvents/'
+
+                scm {
+                    url 'scm:git@github.com:Notronix/' + rootProject.name + '.git'
+                    connection 'scm:git@github.com:Notronix/' + rootProject.name + '.git'
+                    developerConnection 'scm:git@github.com:Notronix/' + rootProject.name + '.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'clint.munden'
+                        name 'Clint Munden'
+                    }
+                }
+            }
+        }
+    }
 }

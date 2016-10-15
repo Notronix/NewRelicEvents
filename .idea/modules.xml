@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/NewRelicEvents.iml" filepath="$PROJECT_DIR$/NewRelicEvents.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NewRelicEvents.iml" filepath="$PROJECT_DIR$/.idea/modules/NewRelicEvents.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NewRelicEvents_main.iml" filepath="$PROJECT_DIR$/.idea/modules/NewRelicEvents_main.iml" group="NewRelicEvents" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/NewRelicEvents_test.iml" filepath="$PROJECT_DIR$/.idea/modules/NewRelicEvents_test.iml" group="NewRelicEvents" />
     </modules>
   </component>
 </project>
